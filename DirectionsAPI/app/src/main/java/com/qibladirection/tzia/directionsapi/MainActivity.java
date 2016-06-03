@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView mDirection;
 
     ImageView directionToKaba;
-    public static final String NA = "N/A";
+
     public static final String FIXED = "FIXED";
     // location min time
     private static final int LOCATION_MIN_TIME = 30 * 1000;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // orientation (azimuth, pitch, roll)
     private float[] orientation = new float[3];
     // smoothed values
-    private float[] smoothed = new float[3];
+
     // sensor manager
     private SensorManager sensorManager;
     // sensor gravity
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Location currentLocation;
     private GeomagneticField geomagneticField;
     private double bearing = 0;
-    private TextView textDirection, textLat, textLong;
+
     private CompassView compassView;
 
 
@@ -206,6 +206,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 (float) currentLocation.getLongitude(),
                 (float) currentLocation.getAltitude(),
                 System.currentTimeMillis());
+        String data=""+new GreatCircleBearing()._bearing(location.getLatitude(),location.getLongitude(),AlHaram_Coordinates_Latitude,AlHaram_Coordinates_Longitude);
+        mDirection.setText(data);
     }
 
     @Override
@@ -231,17 +233,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             // we need to use a low pass filter to make data smoothed
            // smoothed = LowPassFilter.filter(event.values, gravity);
-            gravity[0] = smoothed[0];
-            gravity[1] = smoothed[1];
-            gravity[2] = smoothed[2];
+            gravity[0] = event.values[0];
+            gravity[1] = event.values[1];
+            gravity[2] = event.values[2];
             accelOrMagnetic = true;
+            String data=""+new GreatCircleBearing()._bearing(currentLocation.getLatitude(),currentLocation.getLongitude(),AlHaram_Coordinates_Latitude,AlHaram_Coordinates_Longitude);
+            mDirection.setText(data);
+
 
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
            // smoothed = LowPassFilter.filter(event.values, geomagnetic);
-            geomagnetic[0] = smoothed[0];
-            geomagnetic[1] = smoothed[1];
-            geomagnetic[2] = smoothed[2];
+            geomagnetic[0] = event.values[0];
+            geomagnetic[1] = event.values[1];
+            geomagnetic[2] = event.values[2];
             accelOrMagnetic = true;
+            String data=""+new GreatCircleBearing()._bearing(currentLocation.getLatitude(),currentLocation.getLongitude(),AlHaram_Coordinates_Latitude,AlHaram_Coordinates_Longitude);
+            mDirection.setText(data);
 
         }
 
@@ -266,7 +273,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // update compass view
         compassView.setBearing((float) bearing);
-        directionToKaba.setRotation((float)bearing+(float)(new GreatCircleBearing()._bearing(currentLocation.getLatitude(),currentLocation.getLongitude(),AlHaram_Coordinates_Latitude,AlHaram_Coordinates_Longitude)));
+        double direction=(new GreatCircleBearing()._bearing(currentLocation.getLatitude(),currentLocation.getLongitude(),AlHaram_Coordinates_Latitude,AlHaram_Coordinates_Longitude));
+        int rotation = (int) (360 -bearing+direction);
+        directionToKaba.setRotation(rotation);
 
         if (accelOrMagnetic) {
             compassView.postInvalidate();
